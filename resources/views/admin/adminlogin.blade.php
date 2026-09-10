@@ -99,7 +99,7 @@ body {
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('admin.login') }}">
+                    <form method="POST" action="{{ route('admin.adminlogin') }}">
                         @csrf
 
                         <!-- School ID -->

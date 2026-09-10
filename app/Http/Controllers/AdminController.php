@@ -55,23 +55,25 @@ public function adminlogin(Request $request)
     ]);
 }
 
-    public function logout(Request $request)
-    {
-        $admin = Auth::guard('admin')->user();
+public function logout(Request $request)
+{
+    /** @var AdminModel|null $admin */
+    $admin = Auth::guard('admin')->user();
 
-        if ($admin) {
-            $admin->status = 'inactive';
-            $admin->save();
-        }
-
-        Auth::guard('admin')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()
-            ->route('admin.adminlogin')
-            ->with('success', 'You have been logged out.');
+    if ($admin) {
+        $admin->status = 'inactive';
+        $admin->save();
     }
+
+    Auth::guard('admin')->logout();
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()
+        ->route('admin.adminlogin')
+        ->with('success', 'You have been logged out.');
+}
 
     public function adminregister()
     {

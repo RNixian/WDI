@@ -6,14 +6,8 @@ Route::get('/', function () {
     return view('index');
 });
 
-Route::get('/admin/adminlogin', [AdminController::class, 'adminloginview'])
-    ->name('admin.adminlogin');
-
-Route::post('/admin/adminlogin', [AdminController::class, 'adminlogin'])
-    ->name('admin.login');
-
-Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
-    ->name('admin.admindashboard');
+Route::get('/admin/adminlogin', [AdminController::class, 'adminloginview'])->name('admin.adminlogin');
+Route::post('/admin/adminlogin', [AdminController::class, 'adminlogin'])->name('admin.adminlogin');
 Route::post('/logout', [AdminController::class, 'logout'])->name('admin.logout');
 
 
@@ -21,7 +15,7 @@ Route::middleware(['auth:admin'])->group(function () {
 
 
     // DASHBOARD============================================================================================================
-
+    Route::get('/admin/admindashboard', [AdminController::class, 'dashboard'])->name('admin.admindashboard');
 
     // INVENTORY============================================================================================================
    Route::get('/admin/inventory', [AdminController::class, 'inventory'])

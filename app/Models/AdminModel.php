@@ -9,7 +9,7 @@ class AdminModel extends Authenticatable
 {
     use Notifiable;
 
-    protected $table = 'admin'; // make sure this is correct
+    protected $table = 'admin';
 
     protected $fillable = [
         'firstname',
@@ -23,10 +23,10 @@ class AdminModel extends Authenticatable
 
     protected $hidden = [
         'masterkey',
+        'remember_token',
     ];
 
-    // IMPORTANT: tell Laravel what password field to use
-    public function getAuthPassword()
+    public function getAuthPassword(): string
     {
         return $this->masterkey;
     }
