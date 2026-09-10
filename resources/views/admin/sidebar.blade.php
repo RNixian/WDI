@@ -66,6 +66,8 @@
                 <li><a href="{{ url('/admin/setup/tool_class') }}" class="block py-2 px-4 hover:bg-blue-200">Classification</a></li>
                 <li><a href="{{ url('/admin/setup/tool_cat') }}" class="block py-2 px-4 hover:bg-blue-200">Category</a></li>
                 <li><a href="{{ url('/admin/setup/supplier') }}" class="block py-2 px-4 hover:bg-blue-200">Supplier</a></li>
+                <li><a href="{{ url('/admin/setup/profile') }}" class="block py-2 px-4 hover:bg-blue-200">Profile</a></li>
+                <li><a href="{{ url('/admin/setup/supplier') }}" class="block py-2 px-4 hover:bg-blue-200">Supplier</a></li>
             </ul>
         </li>
 

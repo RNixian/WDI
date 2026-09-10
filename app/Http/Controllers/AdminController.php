@@ -9,49 +9,51 @@ use App\Models\AdminModel;
 use App\Models\ToolModel;
 use App\Models\ToolCategoriesModel;
 use App\Models\ToolClassificationModel;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
+use App\Models\BorrowersModel;
+use App\Models\SupplierModel;
 
 class AdminController extends Controller
 {
-    public function adminloginview()
-    {
-        return view('admin.adminlogin');
+  public function adminloginview()
+{
+    return view('admin.adminlogin');
+}
+
+public function adminsidebar()
+{
+    return view('admin.sidebar');
+}
+
+public function dashboard()
+{
+    return view('admin.admindashboard');
+}
+
+public function adminlogin(Request $request)
+{
+    $request->validate([
+        'username' => 'required',
+        'masterkey' => 'required',
+    ]);
+
+    $admin = AdminModel::where('username', $request->username)->first();
+
+    if ($admin && Hash::check($request->masterkey, $admin->masterkey)) {
+
+        $admin->status = 'active';
+        $admin->save();
+
+        Auth::guard('admin')->login($admin);
+
+        $request->session()->regenerate();
+
+        return redirect()->route('admin.admindashboard');
     }
 
-        public function adminsidebar()
-    {
-        return view('admin.sibebar');
-    }
-
-    public function dashboard()
-    {
-        return view('admin.admindashboard');
-    }
-
-    public function adminlogin(Request $request)
-    {
-        $request->validate([
-            'username' => 'required',
-            'masterkey' => 'required',
-        ]);
-
-        $admin = AdminModel::where('username', $request->username)->first();
-
-        if ($admin && Hash::check($request->masterkey, $admin->masterkey)) {
-
-            $admin->status = 'active';
-            $admin->save();
-
-            Auth::guard('admin')->login($admin);
-
-            return redirect()->route('admin.admindashboard');
-        }
-
-        return back()->withErrors([
-            'username' => 'Invalid Username or Master Key'
-        ]);
-    }
+    return back()->withErrors([
+        'username' => 'Invalid Username or Master Key'
+    ]);
+}
 
     public function logout(Request $request)
     {
@@ -109,15 +111,18 @@ public function inventory()
 {
     $tool_classification = ToolClassificationModel::all();
     $tool_cat = ToolCategoriesModel::all();
+    $supply = SupplierModel::All();
 
     $tools = ToolModel::with([
         'tool_class',
-        'tool_category'
+        'tool_category',
+        'toolsupplier',
     ])->paginate(5);
 
     return view('admin.inventory', compact(
         'tool_cat',
         'tool_classification',
+        'supply',
         'tools'
     ));
 }
@@ -141,6 +146,7 @@ public function storetools(Request $request)
         'tools_description'  => 'required|string|max:255',
         'tool_class_id'      => 'required|integer|exists:tool_classification,id',
         'tool_cat_id'        => 'required|integer|exists:tool_categories,id',
+        'supplier_id'        => 'nullable|integer|exists:suppliers,id',
         'size'               => 'nullable|string|max:100',
         'qty'                => 'required|integer|min:0',
         'purchased_at'       => 'required|date',
@@ -174,6 +180,7 @@ public function updatetools(Request $request, $id)
         'tools_description' => 'required|string|max:255',
         'tool_class_id' => 'required|integer|exists:tool_classification,id',
         'tool_cat_id' => 'required|integer|exists:tool_categories,id',
+        'supplier_id' => 'nullable|integer|exists:suppliers,id',
         'size' => 'nullable|string|max:100',
         'qty' => 'required|integer|min:0',
         'purchased_at' => 'required|date',
@@ -197,7 +204,8 @@ public function searchtools(Request $request)
 {
     $query = ToolModel::with([
         'toolsclassification',
-        'toolcategory'
+        'toolcategory',
+        'toolsupplier'
     ]);
 
     if ($request->filled('search')) {
@@ -221,15 +229,24 @@ public function searchtools(Request $request)
 
     $tool_classification = ToolClassificationModel::all();
     $tool_cat = ToolCategoriesModel::all();
+    $supply = SupplierModel::all();
 
     return view('admin.inventory', compact(
         'tools',
         'tool_cat',
-        'tool_classification'
+        'tool_classification',
+        'supply'
     ));
 }
 
-//=====================================================================================================================
+//=========================================================================================================================
+  //SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP
+  //SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP
+  //SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP
+  //SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP
+  //SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP
+  //SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP SET-UP
+//=========================================================================================================================
 
 public function toolclass()
 {
@@ -384,68 +401,155 @@ public function searchcategory(Request $request)
 
 //=====================================================================================================================
 
-public function borrower()
+public function borrowerprofile()
 {
-    $ToolClassificationModel = ToolClassificationModel::paginate(5);
-    return view('admin.setup.tool_class_su', compact('ToolClassificationModel'));
+    $BorrowersModel = BorrowersModel::paginate(5);
+
+    return view(
+        'admin.setup.borrower_profile',
+        compact('BorrowersModel')
+    );
 }
+
 
 public function storeborrower(Request $request)
 {
     $data = $request->validate([
-        'tool_class' => 'required',
+        'firstname' => 'required|string|max:255',
+        'lastname' => 'required|string|max:255',
+        'emp_id' => 'required|string|max:255',
+        'contact_no' => 'required|string|max:11|min:11',
     ]);
 
-    ToolClassificationModel::create($data);
+    BorrowersModel::create($data);
 
-    return redirect()->route('admin.setup.tool_class_su');
+    return redirect()
+        ->route('admin.setup.borrower_profile')
+        ->with('success', 'Borrower added successfully!');
 }
+
 
 public function deleteborrower($id)
 {
-    $class = ToolClassificationModel::findOrFail($id);
+    $borrower = BorrowersModel::findOrFail($id);
+
+    $borrower->delete();
+
+    return redirect()
+        ->route('admin.setup.borrower_profile')
+        ->with('success', 'Profile has been deleted successfully!');
+}
+
+
+public function updateborrower(Request $request, $id)
+{
+    $validated = $request->validate([
+        'firstname' => 'required|string|max:255',
+        'lastname' => 'required|string|max:255',
+        'emp_id' => 'required|string|max:255',
+        'contact_no' => 'required|string|max:11|min:11',
+    ]);
+
+    $borrower = BorrowersModel::findOrFail($id);
+
+    $borrower->update($validated);
+
+    return redirect()
+        ->route('admin.setup.borrower_profile')
+        ->with('success', 'Borrower updated successfully!');
+}
+
+
+public function searchborrower(Request $request)
+{
+    $query = BorrowersModel::query();
+
+    if ($request->filled('search')) {
+
+        $search = $request->search;
+
+        $query->where(function ($q) use ($search) {
+
+            $q->where('firstname', 'like', '%' . $search . '%')
+              ->orWhere('lastname', 'like', '%' . $search . '%')
+              ->orWhere('emp_id', 'like', '%' . $search . '%')
+              ->orWhere('contact_no', 'like', '%' . $search . '%');
+
+        });
+    }
+
+    $BorrowersModel = $query
+        ->paginate(5)
+        ->withQueryString();
+
+    return view(
+        'admin.setup.borrower_profile',
+        compact('BorrowersModel')
+    );
+}
+
+//=========================================================================================================================
+
+public function supplier()
+{
+    $SupplierModel = SupplierModel::paginate(5);
+    return view('admin.setup.supplier', compact('SupplierModel'));
+}
+
+public function storesupplier(Request $request)
+{
+    $data = $request->validate([
+        'supplier' => 'required',
+    ]);
+
+    SupplierModel::create($data);
+
+    return redirect()->route('admin.setup.supplier');
+}
+
+public function deletesupplier($id)
+{
+    $class = SupplierModel::findOrFail($id);
 
     $class->delete();
 
     return redirect()->back()
-        ->with('success', 'Class has been deleted successfully!');
+        ->with('success', 'Supplier Name has been deleted successfully!');
 }
 
-public function updateborrower(Request $request, $id)
+public function updatesupplier(Request $request, $id)
 {
     $request->validate([
-        'tool_class' => 'required|min:1|max:255',
+        'supplier' => 'required|min:1|max:255',
     ]);
 
-    $class = ToolClassificationModel::findOrFail($id);
+    $supply = SupplierModel::findOrFail($id);
 
-    $class->update([
-        'tool_class' => $request->tool_class,
+    $supply->update([
+        'supplier' => $request->supplier,
     ]);
 
-    return redirect()->route('admin.setup.tool_class_su');
+    return redirect()->route('admin.setup.supplier');
 }
 
-public function searchborrower(Request $request)
+public function searchsupplier(Request $request)
 {
-    $query = ToolClassificationModel::query();
+    $query = SupplierModel::query();
 
     if ($request->filled('search')) {
         $query->where(function ($q) use ($request) {
-            $q->where('tool_class', 'like', '%' . $request->search . '%')
+            $q->where('supplier', 'like', '%' . $request->search . '%')
               ->orWhere('created_at', 'like', '%' . $request->search . '%')
               ->orWhere('updated_at', 'like', '%' . $request->search . '%');
         });
     }
 
-    $ToolClassificationModel = $query
+    $SupplierModel = $query
         ->paginate(5)
         ->withQueryString();
 
-    return view('admin.setup.tool_class_su', compact('ToolClassificationModel'));
+    return view('admin.setup.supplier', compact('SupplierModel'));
 }
-
-
 
 
 

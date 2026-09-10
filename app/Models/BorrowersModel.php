@@ -6,17 +6,41 @@ use Illuminate\Database\Eloquent\Model;
 
 class BorrowersModel extends Model
 {
-     use HasFactory;
- protected $table = 'borrowers';
- protected $fillable = [
-    'firstn',
-    'lastn',
-    'contact_number',
- ];
+    use HasFactory;
 
+    protected $table = 'borrowers';
 
-public function transactions()
+    protected $fillable = [
+        'firstname',
+        'lastname',
+        'emp_id',
+        'contact_no',
+    ];
+
+    public function transactionBorrowers()
     {
-        return $this->hasMany(TransactionModel::class, 'withdrawn_by');
+        return $this->hasMany(
+            TransactionBorrowersModel::class,
+            'borrower_id',
+            'id'
+        );
+    }
+
+    public function borrowersBio()
+    {
+        return $this->hasMany(
+            BorrowersBioModel::class,
+            'borrower_id',
+            'id'
+        );
+    }
+
+     public function borrower()
+    {
+        return $this->hasMany(
+            TransactionToolItemsModel::class,
+            'borrower_id',
+            'id'
+        );
     }
 }

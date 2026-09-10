@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        Schema::dropIfExists('tools');
+        Schema::dropIfExists('withdrawal_team');
     }
 
     /**

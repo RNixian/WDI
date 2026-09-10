@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OctaRead Login</title>
+    <title>Login</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -61,7 +61,11 @@ body {
 </head>
 
 <body class="d-flex justify-content-center align-items-center vh-100">
-
+@if(session('error'))
+    <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
+        {{ session('error') }}
+    </div>
+@endif
 @php
     $adminCount = \App\Models\adminmodel::count();
 @endphp
@@ -95,7 +99,7 @@ body {
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('admin.adminlogin') }}">
+                    <form method="POST" action="{{ route('admin.login') }}">
                         @csrf
 
                         <!-- School ID -->
